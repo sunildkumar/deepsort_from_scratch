@@ -5,9 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "filterpy>=1.4.5",
     "imgcat>=0.6.0",
     "ipdb>=0.13.13",
     "opencv-python>=4.10.0.84",
+    "pytest>=8.3.4",
     "ultralytics>=8.3.57",
     "yt-dlp>=2024.12.23",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-v"
+pythonpath = ["."]
