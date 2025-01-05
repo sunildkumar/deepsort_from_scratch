@@ -173,3 +173,4 @@ cython_debug/
 
 # project specific ignores
 data/*
+yolo11n.pt
