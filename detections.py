@@ -2,6 +2,7 @@ import os
 
 import cv2
 import numpy as np
+from imgcat import imgcat
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
@@ -13,9 +14,12 @@ class Model:
         self.model = YOLO("yolo11n.pt")
         self.model.to("cuda")
 
-    def infer(self, image: np.ndarray) -> list[dict]:
+    def infer(self, image: np.ndarray) -> tuple[list[dict], np.ndarray]:
         """
-        Returns a dict of bboxes with coords in xyxyn format.
+        Returns:
+            tuple containing:
+            - list of detection dicts with bbox coords in xyxyn format
+            - annotated image with boxes drawn
         """
         results: Results = self.model(image, verbose=False)[0]
         boxes = results.boxes.xyxyn.cpu().numpy()
@@ -33,7 +37,8 @@ class Model:
                 }
             )
 
-        return detections
+        annotated_frame = results.plot()
+        return detections, annotated_frame
 
 
 if __name__ == "__main__":
@@ -45,5 +50,6 @@ if __name__ == "__main__":
     ret, frame = cap.read()
     if not ret:
         raise ValueError("Failed to read video")
-    boxes = model.infer(frame)
+    boxes, annotated_frame = model.infer(frame)
     print(boxes)
+    imgcat(annotated_frame)
