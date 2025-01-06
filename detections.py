@@ -18,6 +18,49 @@ class Detection:
     class_name: str
     confidence: float
 
+    @staticmethod
+    def nms(
+        detections: list["Detection"], iou_threshold: float = 0.45
+    ) -> list["Detection"]:
+        """
+        Perform Non-Maximum Suppression on a list of detections
+        Args:
+            detections: List of Detection objects
+            iou_threshold: IoU threshold for considering boxes as overlapping
+        Returns:
+            List of filtered Detection objects
+        """
+        if not detections:
+            return []
+
+        # Sort detections by confidence
+        detections = sorted(detections, key=lambda x: x.confidence, reverse=True)
+
+        filtered_detections = []
+
+        while detections:
+            # Take the detection with highest confidence
+            current = detections.pop(0)
+            filtered_detections.append(current)
+
+            # Filter out detections that overlap significantly with current
+            remaining_detections = []
+            from sort import Track
+
+            for detection in detections:
+                # Only compare detections of the same class
+                if detection.class_name != current.class_name:
+                    remaining_detections.append(detection)
+                    continue
+
+                iou = Track._iou(current.bbox, detection.bbox)
+                if iou < iou_threshold:
+                    remaining_detections.append(detection)
+
+            detections = remaining_detections
+
+        return filtered_detections
+
 
 class Model:
     def __init__(self):

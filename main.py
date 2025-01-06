@@ -5,11 +5,13 @@ import numpy as np
 from tqdm import tqdm
 
 from constants import VIDEO_DIR
-from detections import Model
+from detections import Detection, Model
 from sort import Sort
 
 
-def process_video(video_path: str, model: Model):
+def process_video(
+    video_path: str, model: Model, target_classes: list[str] | None = None
+):
     # Get output filename based on input video name
     input_filename = os.path.basename(video_path)
     output_filename = os.path.splitext(input_filename)[0] + "_processed.mp4"
@@ -29,7 +31,7 @@ def process_video(video_path: str, model: Model):
     out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width * 2, frame_height))
 
     # Initialize SORT tracker
-    tracker = Sort(max_age=7, min_hits=3, iou_threshold=0.5)
+    tracker = Sort(max_age=15, min_hits=3, iou_threshold=0.3)
 
     # Process frames with progress bar
     for _ in tqdm(range(total_frames), desc="Processing video"):
@@ -40,11 +42,22 @@ def process_video(video_path: str, model: Model):
         # Get detections from model
         detections, detection_frame = model.infer(frame)
 
+        # Filter detections by target classes if specified
+        if target_classes:
+            filtered_detections = [
+                d for d in detections if d.class_name in target_classes
+            ]
+        else:
+            filtered_detections = detections
+
+        # Apply NMS to filtered detections
+        nms_detections = Detection.nms(filtered_detections)
+
         # Create tracking visualization frame
         tracking_frame = frame.copy()
 
-        # Update tracker with new detections
-        tracks = tracker.update(detections)
+        # Update tracker with NMS-filtered detections
+        tracks = tracker.update(nms_detections)
 
         # Draw tracking information
         for track in tracks:
@@ -98,11 +111,14 @@ def process_video(video_path: str, model: Model):
 
 if __name__ == "__main__":
     model = Model()
-    # video_path = os.path.join(VIDEO_DIR, "simple_traffic_video.mp4")
-    # process_video(video_path, model)
+    video_path = os.path.join(VIDEO_DIR, "simple_traffic_video.mp4")
+    process_video(video_path, model)
 
-    # video_path = os.path.join(VIDEO_DIR, "complex_traffic_video.mp4")
-    # process_video(video_path, model)
+    video_path = os.path.join(VIDEO_DIR, "complex_traffic_video.mp4")
+    process_video(video_path, model)
 
     video_path = os.path.join(VIDEO_DIR, "race_video.mp4")
     process_video(video_path, model)
+
+    video_path = os.path.join(VIDEO_DIR, "tennis_video.mp4")
+    process_video(video_path, model, target_classes=["person"])

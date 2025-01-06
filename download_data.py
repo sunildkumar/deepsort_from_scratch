@@ -26,10 +26,13 @@ def download_all_videos():
     # 100m dash race.
     race_video = "https://www.youtube.com/watch?v=3nbjhpcZ9_g&ab_channel=realsbstn"
 
+    tennis_video = "https://www.youtube.com/shorts/fUB3BZTRJDI"
+
     video_urls = {
         "simple_traffic_video": {"url": simple_traffic_video, "stop_time": 30},
         "complex_traffic_video": {"url": complex_traffic_video, "stop_time": None},
         "race_video": {"url": race_video, "stop_time": 15},
+        "tennis_video": {"url": tennis_video, "stop_time": 19},
     }
 
     for video_name, video_info in video_urls.items():
