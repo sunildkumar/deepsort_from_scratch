@@ -90,8 +90,8 @@ class Track:
         """
         center_x = x[0]
         center_y = x[1]
-        area = x[2]
-        ratio = x[3]
+        area = max(x[2], 1e-6)  # Ensure positive area
+        ratio = max(x[3], 1e-6)  # Ensure positive ratio
 
         w = np.sqrt(area * ratio)
         h = area / w

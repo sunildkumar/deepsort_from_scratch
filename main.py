@@ -2,6 +2,7 @@ import os
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 from constants import VIDEO_DIR
 from detections import Model
@@ -9,21 +10,29 @@ from sort import Sort
 
 
 def process_video(video_path: str, model: Model):
+    # Get output filename based on input video name
+    input_filename = os.path.basename(video_path)
+    output_filename = os.path.splitext(input_filename)[0] + "_processed.mp4"
+    output_path = os.path.join(VIDEO_DIR, output_filename)
+
     cap = cv2.VideoCapture(video_path)
+
+    # Get total frame count for progress bar
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
     # Create side-by-side output video (twice the width)
-    output_path = os.path.join(VIDEO_DIR, "output.mp4")
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width * 2, frame_height))
 
     # Initialize SORT tracker
-    tracker = Sort(max_age=7, min_hits=3, iou_threshold=0.3)
+    tracker = Sort(max_age=7, min_hits=3, iou_threshold=0.5)
 
-    while cap.isOpened():
+    # Process frames with progress bar
+    for _ in tqdm(range(total_frames), desc="Processing video"):
         ret, frame = cap.read()
         if not ret:
             break
@@ -41,6 +50,7 @@ def process_video(video_path: str, model: Model):
         for track in tracks:
             bbox = track.get_state()
             # Convert normalized coordinates to pixel coordinates
+
             x1 = int(bbox[0] * frame_width)
             y1 = int(bbox[1] * frame_height)
             x2 = int(bbox[2] * frame_width)
@@ -88,5 +98,11 @@ def process_video(video_path: str, model: Model):
 
 if __name__ == "__main__":
     model = Model()
-    video_path = os.path.join(VIDEO_DIR, "simple_traffic_video.mp4")
+    # video_path = os.path.join(VIDEO_DIR, "simple_traffic_video.mp4")
+    # process_video(video_path, model)
+
+    # video_path = os.path.join(VIDEO_DIR, "complex_traffic_video.mp4")
+    # process_video(video_path, model)
+
+    video_path = os.path.join(VIDEO_DIR, "race_video.mp4")
     process_video(video_path, model)
